@@ -7,56 +7,18 @@ from .schemas import State, Todo, Item
 from .models import llm
 from .tools import tools, tools_by_name
 from .prompt_templates import (
-    format_planner_instruction,
-    format_todo_for_llm,
     format_tool_response_for_llm,
-    inject_context
 )
-
-def planner_node(state: State):
-    user_message = state["user_message"]
-    instruction = format_planner_instruction(user_message)
-    
-    todo_llm = llm.with_structured_output(Todo)
-    response = todo_llm.invoke(instruction)
-    
-    todo = response.todo
-    if todo:
-        ai_message = AIMessage(content=f"Generated todo list: {todo}\n")
-        human_message = HumanMessage(content="For each item in the todo list, derive the answer:\n")
-        return {
-            "todo": response.todo,
-            "past_steps": [ai_message, human_message]
-        }
-    else:
-        past_step = HumanMessage(content=user_message)
-        
-        return {
-            "past_steps": [past_step]
-        }
 
 
 def llm_node(state: State):
     """Processes the current task with LLM"""
     llm_with_tool = llm.bind_tools(tools)
     
-    todo = state["todo"]
     past_steps = state["past_steps"]
-    messages = state["messages"]
-    
-    last_step = past_steps[-1]
-    
-    # If last step wasn't a tool call nor tool message, we need to format it for the LLM
-    if isinstance(last_step, HumanMessage):
-        formatted_llm_input = inject_context(
-            todo=todo,
-            past_steps=past_steps,
-        )
-    else:
-        formatted_llm_input = past_steps
         
     try:
-        response = llm_with_tool.invoke(formatted_llm_input)
+        response = llm_with_tool.invoke(past_steps)
     except Exception as e:
         response = AIMessage(content=f"Something went wrong: {e}")
         
@@ -68,7 +30,7 @@ def tool_node(state: State):
     """Performs the tool call"""
     todo = state["todo"]
     result = []
-    for tool_call in state["messages"][-1].tool_calls:
+    for tool_call in state["past_steps"][-1].tool_calls:
         tool_name, tool_args = tool_call["name"], tool_call["args"]
         tool = tools_by_name[tool_name]
         tool_response = tool.invoke(tool_args)
@@ -84,8 +46,8 @@ def tool_node(state: State):
 
 def should_continue(state: State) -> Literal["tool_node", "exec_node", END]:
     """Pure routing function - decides next step based on LLM output and todo list"""
-    messages = state["messages"]
-    last_message = messages[-1]
+    past_steps = state["past_steps"]
+    last_message = past_steps[-1]
 
     # If the LLM makes a tool call, execute it
     if last_message.tool_calls:

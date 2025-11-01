@@ -1,8 +1,9 @@
-from langchain.messages import HumanMessage
+from langchain.messages import SystemMessage, HumanMessage
 from openinference.instrumentation.langchain import LangChainInstrumentor
 from phoenix.otel import register
 
 from agent import create_agent
+from agent.prompt_templates import AGENT_SYSTEM_PROMPT
 
 tracer_provider = register(project_name="plan_exec")
 LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
@@ -14,7 +15,10 @@ def main(user_message):
     state = {
         "user_message": user_message,
         "todo": [],  # List[Item]
-        "past_steps": []  # List[AnyMessage]
+        "past_steps": [
+            SystemMessage(content=AGENT_SYSTEM_PROMPT),
+            HumanMessage(content=user_message)
+        ]  # List[AnyMessage]
     }
     
     response = agent.invoke(state)

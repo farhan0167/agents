@@ -66,13 +66,13 @@ Being proactive with task management demonstrates attentiveness and ensures you 
 Remember: If you only need to make a few tool calls to complete a task, and it is clear what you need to do, it is better to just do the task directly and NOT call this tool at all."""
 
 
-@tool(name="write_todo", description=TODO_TOOL_DESCRIPTION)
-def write_todo(idx: int, todo: List[Item], status: Literal["todo", "in_progress", "done"]):
-    """ 
-    Given an item on the to-do list, change the status of the item to reflect its
-    most recent state.
+@tool("write_todo", description=TODO_TOOL_DESCRIPTION)
+def write_todo(todo: List[Item]):
     """
-    todo[idx].status = status
+    Create or update the complete todo list. 
+    Pass the entire updated list with all items and their current statuses.
+    You can add new items, remove items, or update statuses.
+    """
     return todo
 
 tools = [TavilySearchResults(max_results=3), write_todo]

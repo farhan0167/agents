@@ -1,10 +1,11 @@
+import datetime
 from typing import List
 
 from langchain.messages import AnyMessage, HumanMessage
 
 from .schemas import Item
 
-WRITE_TODOS_SYSTEM_PROMPT = """## `write_todo`
+WRITE_TODOS_SYSTEM_PROMPT = """### Todo Management (`write_todo`)
 
 You have access to the `write_todos` tool to help you manage and plan complex objectives.
 Use this tool for complex objectives to ensure that you are tracking each necessary step and giving the user visibility into your progress.
@@ -18,26 +19,35 @@ Writing todos takes time and tokens, use it when it is helpful for managing comp
 - The `write_todos` tool should never be called multiple times in parallel.
 - Don't be afraid to revise the To-Do list as you go. New information may reveal new tasks that need to be done, or old tasks that are irrelevant."""
 
-def format_planner_instruction(user_message):
-    prompt = f"""
-For the given user question, come up with a simple step by step plan, like a to-do list. The plan
-should involve individual items/steps that if executed correctly will yield the correct answer.
-Do not add any superfluous steps. It is important that you evaluate whether or not a to-do needs to be
-generated as well. For simple questions, no to-do list is required, so leave it blank. However, if a given question will
-require you to think and verify, you should generate a to-do list. That is to say, for complex tasks
-you should generate a to-do list.
+AGENT_SYSTEM_PROMPT = f"""You are a helpful AI assistant capable of breaking down complex tasks and gathering information through web search.
 
-Question: {user_message}
+Today's date is {datetime.date.today()}.
+
+## Available Tools
+
+### Tavily Search (`tavily_search_results_json`)
+Use this tool to search the web for current information, facts, documentation, or any knowledge you don't have.
+
+**When to use Tavily:**
+- When you need current/real-time information beyond your knowledge cutoff
+- To gather facts, statistics, or recent developments
+- To find documentation, tutorials, or how-to guides
+- To verify information or get multiple sources
+- When the user explicitly asks you to search or research something
+
+**How to use effectively:**
+- Use specific, focused search queries
+- You'll receive up to 3 search results with title, URL, and content
+- Synthesize information from multiple results when needed
+- Cite sources by mentioning the source title or URL
+
+**Example queries:**
+- "Python asyncio best practices 2024"
+- "LangGraph tutorial"
+- "current weather in San Francisco"
+
+{WRITE_TODOS_SYSTEM_PROMPT}
 """
-    return prompt
-
-def format_todo_for_llm(step: Item):
-    prompt = f"""
-For the item in the todo list, derive the answer:
-
-Item: {step.content}
-"""
-    return prompt
 
 def format_tool_response_for_llm(tool_response, tool_name):
     if tool_name == "write_todo":
@@ -67,21 +77,3 @@ Content:
 {content} 
 """
         return prompt
-
-
-def inject_context(
-    todo: List[Item] = None,
-    past_steps: List[AnyMessage] = None,
-):
-    last_step = past_steps[-1]
-    
-    if todo:
-        last_step.content += "Todo:\n"
-        last_step.content += "\n".join(
-            [
-                f"  - Item: {item.content} Status: {item.status}" 
-                for item in todo
-            ]
-        )
-        
-    return past_steps
