@@ -6,7 +6,7 @@ from langchain.messages import AnyMessage
 from pydantic import BaseModel, Field
 
 class Item(BaseModel):
-    step: str = Field(description="An item on the to-do list that needs to be completed.")
+    content: str = Field(description="An item on the to-do list that needs to be completed.")
     status: Literal["todo", "in_progress", "done"] = Field(
         default="todo",
         description="The status of the item",
@@ -16,6 +16,8 @@ class Todo(BaseModel):
     todo: List[Item] = Field(description="The to-do list, that is, a list of items to be completed.")
 
 class State(TypedDict):
-    messages: Annotated[List[AnyMessage], add]
-    todo: Todo
+    user_message: str
+    final_output: str
+    todo: List[Item]
+    past_steps: Annotated[List[AnyMessage], add]
     
