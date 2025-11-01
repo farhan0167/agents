@@ -16,8 +16,7 @@ class Todo(BaseModel):
     todo: List[Item] = Field(description="The to-do list, that is, a list of items to be completed.")
 
 class State(TypedDict):
-    user_message: str
     final_output: str
     todo: List[Item]
-    past_steps: Annotated[List[AnyMessage], add]
+    messages: Annotated[List[AnyMessage], add]
     

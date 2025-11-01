@@ -1,7 +1,7 @@
 from typing import Literal, List
 
 from langgraph.graph import END
-from langchain.messages import ToolMessage, HumanMessage, AIMessage
+from langchain.messages import ToolMessage, AIMessage
 
 from .schemas import State, Todo, Item
 from .models import llm
@@ -14,23 +14,23 @@ from .prompt_templates import (
 def llm_node(state: State):
     """Processes the current task with LLM"""
     llm_with_tool = llm.bind_tools(tools)
-    
-    past_steps = state["past_steps"]
-        
+
+    messages = state["messages"]
+
     try:
-        response = llm_with_tool.invoke(past_steps)
+        response = llm_with_tool.invoke(messages)
     except Exception as e:
         response = AIMessage(content=f"Something went wrong: {e}")
-        
+
     return {
-        "past_steps": [response]
+        "messages": [response]
     }
     
 def tool_node(state: State):
     """Performs the tool call"""
     todo = state["todo"]
     result = []
-    for tool_call in state["past_steps"][-1].tool_calls:
+    for tool_call in state["messages"][-1].tool_calls:
         tool_name, tool_args = tool_call["name"], tool_call["args"]
         tool = tools_by_name[tool_name]
         tool_response = tool.invoke(tool_args)
@@ -40,14 +40,14 @@ def tool_node(state: State):
         result.append(
             ToolMessage(content=formatted_tool_response, tool_call_id=tool_call["id"])
         )
-        
-    return {"past_steps": result, "todo": todo}
+
+    return {"messages": result, "todo": todo}
 
 
-def should_continue(state: State) -> Literal["tool_node", "exec_node", END]:
+def should_continue(state: State) -> Literal["tool_node", END]:
     """Pure routing function - decides next step based on LLM output and todo list"""
-    past_steps = state["past_steps"]
-    last_message = past_steps[-1]
+    messages = state["messages"]
+    last_message = messages[-1]
 
     # If the LLM makes a tool call, execute it
     if last_message.tool_calls:

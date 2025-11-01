@@ -11,18 +11,17 @@ LangChainInstrumentor().instrument(tracer_provider=tracer_provider)
 
 def main(user_message):
     agent = create_agent()
-    
+
     state = {
-        "user_message": user_message,
         "todo": [],  # List[Item]
-        "past_steps": [
+        "messages": [
             SystemMessage(content=AGENT_SYSTEM_PROMPT),
             HumanMessage(content=user_message)
         ]  # List[AnyMessage]
     }
-    
+
     response = agent.invoke(state)
-    
+
     return response
 
 
