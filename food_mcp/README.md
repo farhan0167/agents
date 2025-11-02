@@ -8,6 +8,24 @@ As someone who loves to cook, I often end up making the same dish over and over.
 
 But how do we give LLMs access to our pantry? One way to do this would be by taking a photo of your fridge and every other place you store food, and have the LLM add it to some data store. This is not only more complex for the LLM (although I'm sure LLMs are capable of it), it also adds friction for the user. An alternative would be: every time you come back from the grocery store, you snap a picture of your receipt, and have the LLM add it to your data store. Even though this adds friction, it's more intuitive for the user. And LLMs are pretty capable when it comes to deciphering receipt text. This project exposes an MCP server that provides a simple mechanism to add, update, and remove items from your pantry, along with prompts to do receipt extraction.
 
+## Getting Started
+
+1. Make sure you have uv installed, and run:
+    
+    ```bash
+    uv sync
+    ```
+2. At the moment this was only tested with Claude Desktop, so make sure you have that installed in your system. Before launching Claude, run the following command from within this directory:
+   
+    ```bash
+    uv run fastmcp install claude-desktop main.py
+    ```
+3. Open Claude Desktop and start adding your reciepts. 
+
+## System Overview
+
+![./assets/system_diagram.png](image-system)
+
 ## Tools
 
 This MCP server exposes several tools to manage your pantry:
@@ -54,17 +72,3 @@ The pantry follows an **append-only** model that matches how real pantries work.
 - Quantity with units (e.g., "2lbs", "12", "1 gallon")
 - When you added it (automatically tracked)
 - When it expires (automatically calculated based on food type)
-
-## Getting Started
-
-1. Make sure you have uv installed, and run:
-    
-    ```bash
-    uv sync
-    ```
-2. At the moment this was only tested with Claude Desktop, so make sure you have that installed in your system. Before launching Claude, run the following command from within this directory:
-   
-    ```bash
-    uv run fastmcp install claude-desktop main.py
-    ```
-3. Open Claude Desktop and start adding your reciepts. 
