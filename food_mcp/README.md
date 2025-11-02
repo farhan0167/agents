@@ -24,7 +24,11 @@ But how do we give LLMs access to our pantry? One way to do this would be by tak
 
 ## System Overview
 
-![./assets/system_diagram.png](image-system)
+![System Diagram](./assets/system_diagram.png)
+
+The MCP server at its core has a data layer, which consists of a mock database encapsulating CRUD functions over the Pantry data model.
+
+The service layer acts as the interface that defines all the tools, prompts and resources by interacting with the data layer.
 
 ## Tools
 
